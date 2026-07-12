@@ -74,30 +74,61 @@ def recognize_word_phonemes(
     Slice audio by Whisper word boundaries and run Allosaurus per segment.
     word_segments: list of (start_sec, end_sec) tuples.
     """
-    from pydub import AudioSegment
-
-    audio = AudioSegment.from_file(str(full_audio_path))
     results: list[list[str]] = []
+    parent = Path(full_audio_path).parent
 
     for start_sec, end_sec in word_segments:
+        if end_sec <= start_sec:
+            results.append([])
+            continue
+
         start_ms = int(start_sec * 1000)
         end_ms = int(end_sec * 1000)
-        if end_ms <= start_ms:
-            results.append([])
-            continue
+        tmp_path = parent / f"_seg_{start_ms}_{end_ms}.wav"
 
-        segment = audio[start_ms:end_ms]
-        if len(segment) < 50:  # too short
-            results.append([])
-            continue
-
-        tmp_path = Path(full_audio_path).parent / f"_seg_{start_ms}_{end_ms}.wav"
         try:
-            segment.export(str(tmp_path), format="wav")
+            if not _export_segment_wav(full_audio_path, start_sec, end_sec, tmp_path):
+                results.append([])
+                continue
             phonemes = recognize_phonemes(tmp_path)
             results.append(phonemes)
         finally:
-            if tmp_path.exists():
-                tmp_path.unlink()
+            tmp_path.unlink(missing_ok=True)
 
     return results
+
+
+def _export_segment_wav(
+    full_audio_path: str | Path,
+    start_sec: float,
+    end_sec: float,
+    out_path: Path,
+) -> bool:
+    import av
+
+    wrote = False
+    with av.open(str(full_audio_path)) as inp:
+        in_stream = inp.streams.audio[0]
+        resampler = av.audio.resampler.AudioResampler(
+            format="s16",
+            layout="mono",
+            rate=16000,
+        )
+        with av.open(str(out_path), "w", format="wav") as out:
+            out_stream = out.add_stream("pcm_s16le", rate=16000, layout="mono")
+            for frame in inp.decode(in_stream):
+                if frame.time is None:
+                    continue
+                frame_end = frame.time + float(frame.samples) / float(frame.rate)
+                if frame_end <= start_sec:
+                    continue
+                if frame.time >= end_sec:
+                    break
+                for resampled in resampler.resample(frame):
+                    wrote = True
+                    for packet in out_stream.encode(resampled):
+                        out.mux(packet)
+            if wrote:
+                for packet in out_stream.encode(None):
+                    out.mux(packet)
+    return wrote

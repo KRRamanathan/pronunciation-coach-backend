@@ -88,7 +88,12 @@ async def analyze_audio(
     try:
         raw_path.write_bytes(content)
 
-        duration = get_audio_duration_sec(raw_path)
+        try:
+            duration = get_audio_duration_sec(raw_path)
+        except Exception as exc:
+            logger.exception("Audio duration check failed")
+            raise HTTPException(status_code=400, detail=f"Could not read audio file: {exc}") from exc
+
         if duration < settings.min_duration_sec or duration > settings.max_duration_sec:
             raise HTTPException(
                 status_code=400,

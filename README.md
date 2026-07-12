@@ -27,13 +27,18 @@ The app starts and fully functions with an empty `.env`. All environment variabl
 
 ## Local development
 
+**Windows:** Use Python 3.11 (not 3.13 — Allosaurus deps need prebuilt wheels). Set `HF_HUB_DISABLE_SYMLINKS=1` before first run if Developer Mode is off.
+
 ```bash
 cd pronunciation-coach-backend
-python -m venv .venv
+py -3.11 -m venv .venv
 .venv\Scripts\activate        # Windows
 pip install -r requirements.txt
 python migrate.py
+# Windows PowerShell:
+$env:HF_HUB_DISABLE_SYMLINKS="1"
 uvicorn app.main:app --reload --port 7860
+# Or: .\start-local.ps1
 ```
 
 First request loads models (~30–60s cold start). Health check: `GET http://localhost:7860/api/health`

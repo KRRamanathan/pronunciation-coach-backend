@@ -9,5 +9,6 @@ faster-whisper==1.1.0
 allosaurus==1.0.2
 g2p-en==2.1.0
 pydub==0.25.1
+imageio-ffmpeg==0.6.0
 google-generativeai==0.8.4
 httpx==0.28.1
