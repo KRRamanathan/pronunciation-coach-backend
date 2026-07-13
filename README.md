@@ -50,12 +50,30 @@ docker build -t pronunciation-coach-backend .
 docker run -p 7860:7860 pronunciation-coach-backend
 ```
 
+## Railway deployment (recommended if HF Docker is unavailable)
+
+1. Push this repo to GitHub (already at `KRRamanathan/pronunciation-coach-backend`).
+2. Go to [railway.app](https://railway.app) → **New Project** → **Deploy from GitHub repo** → select `pronunciation-coach-backend`.
+3. Railway detects `railway.toml` and builds via **Dockerfile** (~10–15 min first build).
+4. In **Variables**, add:
+
+| Variable | Value |
+|----------|-------|
+| `DATABASE_URL` | Your Supabase URI — plain `postgresql://...` is fine |
+| `CORS_ORIGINS` | `https://pronunciation-coach-frontend.vercel.app` |
+| `GEMINI_API_KEY` | Optional |
+
+5. **Settings → Networking → Generate Domain** — copy the public URL (e.g. `https://pronunciation-coach-backend-production.up.railway.app`).
+6. Update Vercel env `NEXT_PUBLIC_API_URL` to that Railway URL and redeploy the frontend.
+
+**Note:** Railway free trial credits apply. Whisper + Allosaurus need ~2–4 GB RAM — if the service crashes on startup, upgrade the service memory in Railway or use Hugging Face Docker (16 GB free tier).
+
 ## Hugging Face Spaces deployment
 
 1. Create a new **Docker** Space on [huggingface.co/spaces](https://huggingface.co/spaces).
 2. Push this repo (or connect GitHub).
 3. Set Space secrets (optional):
-   - `DATABASE_URL` — Supabase connection string (`postgresql+asyncpg://...`)
+   - `DATABASE_URL` — Supabase connection string (`postgresql://...` or `postgresql+asyncpg://...`)
    - `CORS_ORIGINS` — your Vercel frontend URL
    - `GEMINI_API_KEY` — optional polish
 4. Space exposes port **7860** automatically.
