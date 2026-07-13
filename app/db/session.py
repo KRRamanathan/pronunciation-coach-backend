@@ -20,7 +20,7 @@ engine = create_async_engine(
     settings.async_database_url,
     echo=False,
     future=True,
-    connect_args=_connect_args or None,
+    connect_args=_connect_args,
 )
 AsyncSessionLocal = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
