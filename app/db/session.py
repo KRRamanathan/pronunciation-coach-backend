@@ -11,7 +11,17 @@ class Base(DeclarativeBase):
 
 
 settings = get_settings()
-engine = create_async_engine(settings.async_database_url, echo=False, future=True)
+
+_connect_args: dict = {}
+if "supabase.co" in settings.async_database_url:
+    _connect_args["ssl"] = True
+
+engine = create_async_engine(
+    settings.async_database_url,
+    echo=False,
+    future=True,
+    connect_args=_connect_args or None,
+)
 AsyncSessionLocal = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
 
