@@ -19,6 +19,16 @@ class Settings(BaseSettings):
     supabase_region: str = "ap-south-1"
 
     @property
+    def async_database_url(self) -> str:
+        """Normalize standard postgresql:// URLs for SQLAlchemy async (asyncpg)."""
+        url = self.database_url
+        if url.startswith("postgresql://"):
+            return url.replace("postgresql://", "postgresql+asyncpg://", 1)
+        if url.startswith("postgres://"):
+            return url.replace("postgres://", "postgresql+asyncpg://", 1)
+        return url
+
+    @property
     def cors_origin_list(self) -> list[str]:
         if self.cors_origins == "*":
             return ["*"]
