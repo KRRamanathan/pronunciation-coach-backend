@@ -1,0 +1,21 @@
+# Render Blueprint — pronunciation-coach backend
+# Note: Free tier (512MB RAM) may OOM with Whisper+Allosaurus.
+# Recommended: Starter plan ($7/mo) or Hugging Face PRO ($9/mo) for Docker Space.
+services:
+  - type: web
+    name: pronunciation-coach-api
+    runtime: docker
+    plan: free
+    region: singapore
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/health
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: CORS_ORIGINS
+        value: https://pronunciation-coach-frontend.vercel.app
+      - key: HF_HUB_DISABLE_SYMLINKS
+        value: "1"
